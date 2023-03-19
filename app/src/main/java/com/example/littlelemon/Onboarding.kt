@@ -117,7 +117,7 @@ fun Onboarding(navController: NavHostController) {
                                 apply()
                             }
 
-                            navController.navigate(Destinations.Profile)
+                            navController.navigate(Destinations.Home)
                         } else {
                             // Display "Registration unsuccessful. Please enter all data." message
                         }
