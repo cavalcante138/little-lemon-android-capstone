@@ -1,13 +1,14 @@
 package com.example.littlelemon
 
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
-import androidx.compose.material.Button
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
@@ -15,9 +16,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,47 +28,159 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
+import com.example.littlelemon.ui.theme.LittleLemonColor
+import kotlinx.coroutines.launch
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun Home(navController: NavHostController, viewModel: List<MenuItemEntity>, searchPhrase: String, onSearchPhraseChange: (String) -> Unit) {
+
+
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val profileIcon: Painter = painterResource(id = R.drawable.profile)
-        Image(
-            painter = profileIcon,
-            contentDescription = "Profile Icon",
+
+        Row(horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically) {
+            Spacer(modifier = Modifier.fillMaxWidth(0.05F))
+            Image(
+                painter = painterResource(id = R.drawable.littlelemonimgtxt_nobg),
+                contentDescription = "Little Lemon Logo",
+                modifier = Modifier
+                    .fillMaxWidth(0.5F)
+                    .padding(horizontal = 20.dp)
+            )
+            IconButton(onClick = {
+                navController.navigate(Destinations.Profile)
+            },
+                ) {
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Profile",
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(RoundedCornerShape(20.dp))
+
+                )
+            }
+        }
+        Column(
             modifier = Modifier
-                .padding(top = 16.dp)
-                .clickable { navController.navigate(Destinations.Profile) }
-        )
+                .background(LittleLemonColor.green)
+        ) {
+            Column(
+                modifier = Modifier.padding(10.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.title),
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = LittleLemonColor.yellow
+                )
+                Text(
+                    text = stringResource(id = R.string.location),
+                    fontSize = 24.sp,
+                    color = LittleLemonColor.cloud
+                )
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.description),
+                        style = MaterialTheme.typography.body1,
+                        modifier = Modifier
+                            .padding(bottom = 28.dp, end = 20.dp)
+                            .fillMaxWidth(0.6f),
+                        color = LittleLemonColor.cloud
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.upperpanelimage),
+                        contentDescription = "Upper Panel Image",
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(7.dp))
+            ) {
+                TextField(
+                    value = searchPhrase,
+                    onValueChange = onSearchPhraseChange,
+                    label = { Text("Enter search phrase") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = ""
+                        )
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(LittleLemonColor.gray)
+                )
+            }
+        }
 
-        Text(text = "Little Lemon", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text(text = "Chicago", fontSize = 18.sp)
-        Text(text = "We are a family-owned Mediterranean restaurant, focused on traditional recipes served with a modern twist", fontSize = 14.sp)
 
+        val categoriesSet = mutableStateOf<Set<String>>(emptySet())
 
-        TextField(
-            value = searchPhrase,
-            onValueChange = onSearchPhraseChange,
-            label = { Text("Enter search phrase") },
-            leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "") },
-            singleLine = true
-        )
+        val categories = mutableListOf<String>("all")
 
-        val categories = listOf("starters", "desserts", "mains")
+        categoriesSet.value = viewModel.map { it.category }.toSet()
+
+        categories.addAll(categoriesSet.value)
+
 
         val selectedCategory = remember { mutableStateOf("") }
 
-        Row {
-            categories.forEach { category ->
+        LazyRow {
+            items(categories){ category ->
                 Button(
-                    onClick = { selectedCategory.value = category },
-                    modifier = Modifier.padding(4.dp)
+                    onClick = {
+                        if(category === "all"){
+                            selectedCategory.value = ""
+                        }else if(category === selectedCategory.value){
+                            selectedCategory.value = ""
+                        }
+                        else{
+                            selectedCategory.value = category
+                        }},
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor =
+                        if (category === "all" && selectedCategory.value  === ""){
+                            LittleLemonColor.green
+                        }else if(category === selectedCategory.value){
+                            LittleLemonColor.green
+                        }else{
+                            LittleLemonColor.cloud
+                        }
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.padding(6.dp)
+
                 ) {
-                    Text(category)
+                    Text(
+                        text = category.capitalize(),
+                        color =
+                        if (category === "all" && selectedCategory.value  === ""){
+                            LittleLemonColor.cloud
+                        }else if(category === selectedCategory.value){
+                            LittleLemonColor.cloud
+                        }else{
+                            LittleLemonColor.green
+                        }
+                    )
+                    
                 }
             }
         }
@@ -92,14 +207,45 @@ fun MenuItems(itemsList: List<MenuItemEntity>) {
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MenuItem(menuItem: MenuItemEntity) {
-    Column {
-        Text(text = menuItem.title, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Text(text = menuItem.description, fontSize = 14.sp)
-        Text(text = "$${menuItem.price}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    Card() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+        ) {
+            GlideImage(
+                model = menuItem.image,
+                contentDescription = "Menu item image",
+                modifier = Modifier
+                    .fillMaxWidth(0.25f)
 
-        GlideImage(
-            model = menuItem.image,
-            contentDescription = "Menu item image",
-        )
+            )
+            Column(
+                modifier = Modifier.padding(start = 10.dp)
+            ) {
+                Text(
+                    text = menuItem.title,
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = menuItem.description,
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier
+                        .fillMaxWidth(0.95f)
+                        .padding(top = 5.dp, bottom = 5.dp)
+                )
+                Text(
+                    text = "$${menuItem.price}",
+                    style = MaterialTheme.typography.body2,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+        }
     }
+    Divider(
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+        thickness = 1.dp,
+        color = LittleLemonColor.yellow
+    )
 }
